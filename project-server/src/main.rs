@@ -3,7 +3,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 
 // Constants
@@ -51,11 +51,12 @@ fn main() {
   })
   .expect("Error setting Ctrl+C handler.");
   
+  // Meta files.
   println!("\nListing project directory contents...");
-  print_dir_files(project_path);
+  walk_dir_files(project_path);
 
   println!();
-  println!("Theseus project server started.\nProject path: \"{:?}\"\nCtrl+C to stop the server.\n", project_assets_path.canonicalize().unwrap());
+  println!("Theseus project server started.\nProject path: {:?}\nCtrl+C to stop the server.\n", project_assets_path.canonicalize().unwrap());
   loop {
     if live.load(Ordering::SeqCst) == false { break; }
 
@@ -67,20 +68,42 @@ use std::io;
 use std::fs;
 // Recursively walk directories, call callback
 // fn visit_dirs(dir: &Path, cb: &dyn Fn(&DirEntry)) -> io::Result<()> {
-fn print_dir_files(dir: &Path) -> io::Result<()> {
+fn walk_dir_files(dir: &Path) -> io::Result<()> {
   if dir.is_dir() {
-      for entry in fs::read_dir(dir)? {
-          let entry = entry?;
-          let path = entry.path();
-          if path.is_dir() {
-              // visit_dirs(&path, cb)?;
-              println!("DIR: {:?}", entry);
-              print_dir_files(&path)?;
-          } else {
-              // cb(&entry);
-              println!("{:?}", entry);
-          }
+    for entry in fs::read_dir(dir)? {
+      let entry = entry?;
+      let path = entry.path();
+      if path.is_dir() {
+        // visit_dirs(&path, cb)?;
+        println!("DIR: {:?}", entry);
+        
+        let meta_path = get_meta_file(path.as_path()).unwrap();
+        println!("Meta path would be: {:?}", meta_path);
+
+        walk_dir_files(&path)?;
+      } else {
+        // cb(&entry);
+        println!("{:?}", entry);
+        
+        let meta_path = get_meta_file(path.as_path());
+        println!("Meta path would be: {:?}", meta_path);
       }
+    }
   }
   Ok(())
+}
+
+fn get_meta_file(path: &Path) -> io::Result<PathBuf> {
+  let meta_path;
+  if path.is_dir() {
+    // Dir + ".meta"
+    meta_path = path.with_extension("meta");
+  } else {
+    // File + extension + ".meta"
+    let ext = path.extension().unwrap().to_str().unwrap();
+    let mut ext = String::from(ext);
+    ext.push_str(".meta");
+    meta_path = path.with_extension(ext);
+  }
+  return Ok(meta_path);
 }
