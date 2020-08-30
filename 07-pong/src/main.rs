@@ -29,22 +29,23 @@ pub fn main() -> amethyst::Result<()> {
     use amethyst::renderer;
 
     amethyst::GameDataBuilder::default()
-    // We add a "Bundle" of multiple systems to set up a basic window and render loop quickly.
-    // A Bundle is a collection of Systems.
-    // This bundle, the RenderingBundle, dynamically accepts plugins that govern its behavior.
-    .with_bundle(
-      renderer::RenderingBundle::<renderer::types::DefaultBackend>::new()
-        // RenderToWindow allows us to open a window and render to it.
-        // This is what we pass our DisplayConfig to define window size, title, etc.
-        .with_plugin(
-          renderer::RenderToWindow::from_config(display_config)
-            .with_clear([0, 0, 0, 1])
-        )
-        // RenderFlat2D will allow us to render entities with a SpriteRenderer component.
-        .with_plugin(renderer::RenderFlat2D::default())
-    )?
-    // RenderToWindow will allow us to open a renderable window.
-    // RenderFlat2D will allow us to render 2D sprites.
+      // We add a "Bundle" of multiple systems to set up a basic window and render loop quickly.
+      // A Bundle is a collection of Systems.
+      // This bundle, the RenderingBundle, dynamically accepts plugins that govern its behavior.
+      .with_bundle(
+        renderer::RenderingBundle::<renderer::types::DefaultBackend>::new()
+          // RenderToWindow allows us to open a window and render to it.
+          // This is what we pass our DisplayConfig to define window size, title, etc.
+          .with_plugin(
+            renderer::RenderToWindow::from_config(display_config)
+              .with_clear([0, 0, 0, 1])
+          )
+          // RenderFlat2D will allow us to render entities with a SpriteRenderer component.
+          .with_plugin(renderer::RenderFlat2D::default())
+      )?
+
+      // We also want to add the Transform bundle to support Transform components.
+      .with_bundle(amethyst::core::TransformBundle::new())?
   };
   
   // Construct the game and kick off the update loop by calling run().
