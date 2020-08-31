@@ -3,6 +3,19 @@
 // The internal pong module contains the game data we'll simulate.
 mod pong;
 
+// This module contains our custom systems in the game.
+// We could define them however we want, we're just choosing to keep them in a module named "systems". Under the hood, the system module is publically re-exporting modules defined deeper in its private namespace that contain the system implementations.
+mod systems;
+
+// Issue: Input Lag
+// ---
+// The input lag here is HORRIBLE. This is due to the default Render pipeline settings as well as the fact that the Input system needs to run before game logic within the same thread.
+// TODO: Use a custom RenderGraph to reduce latency.
+// TODO: Instead of using the default input bundle, determine how to add two systems on the same thread:
+//  - thread_local InputSystem
+//  - thread_local (user systems)
+// See: https://github.com/amethyst/amethyst/issues/1801#issuecomment-586706604
+
 pub fn main() -> amethyst::Result<()> {
   // Let's get logging set up first. The default logger will allow us to print info, warnings, and errors to the terminal window.
   amethyst::start_logger(Default::default());
@@ -28,7 +41,20 @@ pub fn main() -> amethyst::Result<()> {
     // We'll be setting up a set of renderer systems provided by Amethyst.
     use amethyst::renderer;
 
+    // Set up an InputBundle with input bindings. For now we reference an input configuration file and import it as a string. This is really flimsy and difficult to extend, so I'll want to change this ASAP...
+    let input_bundle = {
+      use amethyst::utils::application_root_dir;
+      use amethyst::input;
+
+      let binding_path = application_root_dir()?.join("config").join("bindings.ron");
+      input::InputBundle::<input::StringBindings>::new()
+        .with_bindings_from_file(binding_path)?
+    };
+
     amethyst::GameDataBuilder::default()
+      // We want to add the Transform bundle to support Transform components.
+      .with_bundle(amethyst::core::TransformBundle::new())?
+
       // We add a "Bundle" of multiple systems to set up a basic window and render loop quickly.
       // A Bundle is a collection of Systems.
       // This bundle, the RenderingBundle, dynamically accepts plugins that govern its behavior.
@@ -44,8 +70,11 @@ pub fn main() -> amethyst::Result<()> {
           .with_plugin(renderer::RenderFlat2D::default())
       )?
 
-      // We also want to add the Transform bundle to support Transform components.
-      .with_bundle(amethyst::core::TransformBundle::new())?
+      // Add the InputBundle we created earlier.
+      .with_bundle(input_bundle)?
+
+      // Add the Paddle system.
+      .with(systems::PaddleSystem, "paddle_system", &["input_system"])
   };
   
   // Construct the game and kick off the update loop by calling run().

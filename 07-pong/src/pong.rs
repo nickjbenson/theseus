@@ -22,11 +22,12 @@ impl SimpleState for Pong {
 
     // And we'll initialize the paddles.
     // Initialize the spritesheet for paddle graphics.
-    let spritesheet_handle = load_sprite_sheet(world);
+    let spritesheet_handle = load_spritesheet(world);
 
     // Because there's no System that uses the Paddle component yet, the world isn't able to handle storing the component's data. To fix this for now, we'll just manually register the component's with the world.
-    use amethyst::prelude::WorldExt;
-    world.register::<Paddle>();
+    // use amethyst::prelude::WorldExt;
+    // world.register::<Paddle>();
+    // (Now there's a PaddleSystem, so no need to call world.register any more.)
     initialize_paddles(world, spritesheet_handle);
   }
 
@@ -39,14 +40,14 @@ pub const ARENA_WIDTH: f32 = 100.0;
 fn initialize_camera(world: &mut amethyst::prelude::World) {
   // We'll initialize a 2D camera that with the specified arena's width and height.
   use amethyst::renderer;
-  let camera = renderer::Camera::standard_2d(ARENA_WIDTH, ARENA_HEIGHT);
+  let _camera = renderer::Camera::standard_2d(ARENA_WIDTH, ARENA_HEIGHT);
 
   // The camera's Transform will be placed at a standard Z depth back -- not that this matters, because the projection is orthographic. (Theoretically it only matters for the clipping plane.)
   use amethyst::core;
   let mut transform = core::Transform::default();
   transform.set_translation_xyz(ARENA_WIDTH * 0.5, ARENA_HEIGHT * 0.5, 1.0);
   
-  use amethyst::prelude::WorldExt;
+  // use amethyst::prelude::WorldExt;
   use amethyst::prelude::Builder;
   world
     .create_entity()
@@ -106,7 +107,7 @@ fn initialize_paddles(world: &mut amethyst::prelude::World, spritesheet_handle: 
 
   // Create the entities.
   use amethyst::prelude::Builder;
-  use amethyst::prelude::WorldExt;
+  // use amethyst::prelude::WorldExt;
   world
     .create_entity()
     .with(Paddle::new(Side::Left))
@@ -133,7 +134,7 @@ use amethyst::renderer::SpriteSheet;
 use amethyst::renderer::SpriteSheetFormat;
 use amethyst::renderer::ImageFormat;
 
-fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
+fn load_spritesheet(world: &mut World) -> Handle<SpriteSheet> {
   // Load texture data from the PNG spritesheet for the paddle.
   let texture_handle = {
     // The asset loader is a Resource. Resources are types of data  It's stored in the World and created when the Application is created. It handles manages the loading of all kinds of Assets.
@@ -152,7 +153,7 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
   };
 
   // Now, load the paddle sprite sheet using the texture and a SpriteSheetFormat definition for the asset.
-  let spritesheet_handle = {
+  {
     let loader = world.read_resource::<Loader>();
     let spritesheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
     loader.load(
@@ -161,7 +162,5 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
       (),
       &spritesheet_store
     )
-  };
-
-  spritesheet_handle
+  }
 }

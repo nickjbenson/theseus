@@ -1,0 +1,9 @@
+[package]
+name = "states"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+components = { path = "../components" }
+resources = { path = "../resources" }
+amethyst = { version = "0.15", features = ["vulkan"] }
