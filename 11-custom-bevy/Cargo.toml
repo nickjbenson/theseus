@@ -1,0 +1,13 @@
+[package]
+name = "mygame"
+version = "0.1.0"
+authors = ["Nicholas Benson <nickjbenson@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy = { git = "https://github.com/bevyengine/bevy", rev = "028a22b12936797d3a7ca1ad5d715a98bdf27907" }
+
+# [patch.crates-io]
+# bevy = { git= "https://github.com/bevyengine/bevy" }
